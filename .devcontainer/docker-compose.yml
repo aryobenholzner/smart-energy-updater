@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  devcontainer:
+    image: "mcr.microsoft.com/devcontainers/go:1.21-bullseye"
+  influx:
+    image: "influxdb:2.7.4"
+    ports:
+      - "8086:8086"
+    volumes:
+      - influx-data:/var/lib/influxdb2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: influx
+      DOCKER_INFLUXDB_INIT_PASSWORD: influx123
+      DOCKER_INFLUXDB_INIT_ORG: influx-org
+      DOCKER_INFLUXDB_INIT_BUCKET: influx-bucket
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: influx-token
+
+volumes:
+  influx-data:
