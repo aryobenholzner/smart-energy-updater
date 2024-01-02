@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-co-op/gocron/v2"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,26 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Println("hello world")
-
-	scheduler, err := gocron.NewScheduler()
-	if err != nil {
-		fmt.Println("could not create scheduler", err)
-		return
-	}
-
-	_, err = scheduler.NewJob(
-		gocron.DurationJob(2*time.Second),
-		gocron.NewTask(func() {
-			fmt.Println("hello from the job")
-		}),
-	)
-	if err != nil {
-		fmt.Println("could not create job", err)
-		return
-	}
-
-	scheduler.Start()
+	startUpdateJob()
 
 	go forever()
 
