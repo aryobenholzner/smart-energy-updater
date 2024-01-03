@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -19,7 +20,7 @@ func startUpdateJob() {
 	}
 
 	_, err = scheduler.NewJob(
-		gocron.OneTimeJob(gocron.OneTimeJobStartImmediately()),
+		gocron.CronJob(os.Getenv("CRON_SCHEDULE"), false),
 		gocron.NewTask(func() { updateEnergyPrices() }),
 	)
 	if err != nil {
@@ -30,9 +31,10 @@ func startUpdateJob() {
 }
 
 func updateEnergyPrices() {
+	log.Println("Price update started")
 	var err error
 
-	retryCount := 60 * 24
+	retryCount := 5
 	for i := 0; i < retryCount; i++ {
 		responseData, err := fetchEnergyPrices()
 		if err == nil {
@@ -75,12 +77,21 @@ func writeToDb(priceData *Response) {
 	influxClient := influxdb2.NewClient(influxHost, token)
 	writeApi := influxClient.WriteAPIBlocking(org, bucket)
 
+	flatFeeEnv, flatFeeEnvExists := os.LookupEnv("FLAT_FEE")
+	var flatFee float64 = 0
+	var err error
+	if flatFeeEnvExists {
+		flatFee, err = strconv.ParseFloat(flatFeeEnv, 32)
+		if err != nil {
+			log.Println("flat fee env could not be parsed to float: ", err)
+		}
+	}
+
 	for _, data := range priceData.Data {
 		point := influxdb2.NewPoint(
 			"energy-price",
 			map[string]string{"unit": priceData.Unit},
-			//todo add flat tax variable
-			map[string]interface{}{"value": data.Value + 1.44},
+			map[string]interface{}{"value": data.Value + flatFee},
 			data.Date.Time,
 		)
 
@@ -90,5 +101,5 @@ func writeToDb(priceData *Response) {
 		}
 	}
 	influxClient.Close()
-	log.Println("Wrote %d points to db", len(priceData.Data))
+	log.Printf("Wrote %d points to db\n", len(priceData.Data))
 }
