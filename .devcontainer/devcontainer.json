@@ -12,7 +12,8 @@
     "INFLUX_BUCKET": "influx-bucket",
     "INFLUX_TOKEN": "influx-token",
     "FLAT_FEE": "1.44",
-    "CRON_SCHEDULE": "* * * * *"
+    "CRON_SCHEDULE": "* * * * *",
+    "INFLUX_MEASUREMENT": "energy-price"
   }
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},

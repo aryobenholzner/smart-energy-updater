@@ -73,6 +73,7 @@ func writeToDb(priceData *Response) {
 	token := os.Getenv("INFLUX_TOKEN")
 	bucket := os.Getenv("INFLUX_BUCKET")
 	org := os.Getenv("INFLUX_ORG")
+	targetMeasurement := os.Getenv("INFLUX_MEASUREMENT")
 
 	influxClient := influxdb2.NewClient(influxHost, token)
 	writeApi := influxClient.WriteAPIBlocking(org, bucket)
@@ -89,7 +90,7 @@ func writeToDb(priceData *Response) {
 
 	for _, data := range priceData.Data {
 		point := influxdb2.NewPoint(
-			"energy-price",
+			targetMeasurement,
 			map[string]string{"unit": priceData.Unit},
 			map[string]interface{}{"value": data.Value + flatFee},
 			data.Date.Time,
