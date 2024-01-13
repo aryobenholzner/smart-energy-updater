@@ -20,7 +20,7 @@ func updateEnergyPrices() {
 	for i := 0; i < retryCount; i++ {
 		responseData, err := fetchEnergyPrices()
 		if err == nil {
-			writeToDb(responseData)
+			writePriceDataToDb(responseData)
 			return
 		}
 		time.Sleep(time.Minute)
@@ -50,12 +50,12 @@ func fetchEnergyPrices() (*Response, error) {
 	return &parsedResponse, nil
 }
 
-func writeToDb(priceData *Response) {
+func writePriceDataToDb(priceData *Response) {
 	influxHost := os.Getenv("INFLUX_HOST")
 	token := os.Getenv("INFLUX_TOKEN")
 	bucket := os.Getenv("INFLUX_BUCKET")
 	org := os.Getenv("INFLUX_ORG")
-	targetMeasurement := os.Getenv("INFLUX_MEASUREMENT")
+	targetMeasurement := os.Getenv("INFLUX_PRICE_MEASUREMENT")
 
 	influxClient := influxdb2.NewClient(influxHost, token)
 	writeApi := influxClient.WriteAPIBlocking(org, bucket)
@@ -84,5 +84,5 @@ func writeToDb(priceData *Response) {
 		}
 	}
 	influxClient.Close()
-	log.Printf("Wrote %d points to db\n", len(priceData.Data))
+	log.Printf("Wrote %d price points to db\n", len(priceData.Data))
 }

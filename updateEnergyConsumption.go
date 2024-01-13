@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/antchfx/htmlquery"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"io"
 	"log"
 	"net/http"
@@ -20,7 +22,7 @@ func updateEnergyConsumption() {
 	for i := 0; i < retryCount; i++ {
 		responseData, err := fetchEnergyConsumption()
 		if err == nil {
-			log.Println(responseData)
+			writeConsumptionToDb(responseData)
 			return
 		}
 		time.Sleep(time.Hour)
@@ -204,4 +206,32 @@ func fetchEnergyConsumption() (*BewegungsDaten, error) {
 	}
 
 	return &bewegungsdaten, nil
+}
+
+func writeConsumptionToDb(consumption *BewegungsDaten) {
+	influxHost := os.Getenv("INFLUX_HOST")
+	token := os.Getenv("INFLUX_TOKEN")
+	bucket := os.Getenv("INFLUX_BUCKET")
+	org := os.Getenv("INFLUX_ORG")
+	targetMeasurement := os.Getenv("INFLUX_CONSUMPTION_MEASUREMENT")
+
+	influxClient := influxdb2.NewClient(influxHost, token)
+	writeApi := influxClient.WriteAPIBlocking(org, bucket)
+
+	for _, data := range consumption.Values {
+		log.Println("value", data.ZeitpunktBis.Time, data.Wert)
+		point := influxdb2.NewPoint(
+			targetMeasurement,
+			map[string]string{"unit": consumption.Descriptor.Einheit},
+			map[string]interface{}{"value": data.Wert},
+			data.ZeitpunktBis.Time,
+		)
+
+		err := writeApi.WritePoint(context.Background(), point)
+		if err != nil {
+			log.Println("error while writing to db: ", err)
+		}
+	}
+	influxClient.Close()
+	log.Printf("Wrote %d consumption points to db\n", len(consumption.Values))
 }
