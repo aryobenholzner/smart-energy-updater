@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/go-co-op/gocron/v2"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"io"
 	"log"
@@ -12,23 +11,6 @@ import (
 	"strconv"
 	"time"
 )
-
-func startUpdateJob() {
-	scheduler, err := gocron.NewScheduler()
-	if err != nil {
-		log.Fatal("could not create scheduler", err)
-	}
-
-	_, err = scheduler.NewJob(
-		gocron.CronJob(os.Getenv("CRON_SCHEDULE"), false),
-		gocron.NewTask(func() { updateEnergyPrices() }),
-	)
-	if err != nil {
-		log.Fatal("could not create job", err)
-	}
-
-	scheduler.Start()
-}
 
 func updateEnergyPrices() {
 	log.Println("Price update started")
@@ -45,7 +27,7 @@ func updateEnergyPrices() {
 
 	}
 	if err != nil {
-		log.Println("Fetch request failed")
+		log.Println("Fetching energy prices failed")
 	}
 }
 

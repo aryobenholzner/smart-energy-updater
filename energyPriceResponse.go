@@ -10,15 +10,15 @@ type Response struct {
 }
 
 type ResponseData struct {
-	Date  DateTime `json:"date"`
-	Value float64  `json:"value"`
+	Date  EnergyPriceDateTime `json:"date"`
+	Value float64             `json:"value"`
 }
 
-type DateTime struct {
+type EnergyPriceDateTime struct {
 	time.Time
 }
 
-func (t *DateTime) UnmarshalJSON(b []byte) (err error) {
+func (t *EnergyPriceDateTime) UnmarshalJSON(b []byte) (err error) {
 	date, err := time.Parse(`"2006-01-02T15:04:05-07:00"`, string(b))
 	if err != nil {
 		return err
