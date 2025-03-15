@@ -25,11 +25,12 @@ func updateEnergyConsumption() {
 			writeConsumptionToDb(responseData)
 			return
 		}
+		log.Println("Error fetching energy consumption, trying again in an hour:", err)
 		time.Sleep(time.Hour)
 	}
 
 	if err != nil {
-		log.Println("Fetching energy consumption")
+		log.Println("Error fetching energy consumption")
 	}
 
 }
@@ -50,6 +51,10 @@ func fetchEnergyConsumption() (*BewegungsDaten, error) {
 	loginPageUrl := authUrl + "auth?" + authParams.Encode()
 
 	loginPage, err := http.Get(loginPageUrl)
+
+	if err != nil {
+		return nil, err
+	}
 
 	document, err := htmlquery.Parse(loginPage.Body)
 	if err != nil {
@@ -137,8 +142,6 @@ func fetchEnergyConsumption() (*BewegungsDaten, error) {
 		return nil, err
 	}
 
-	//TODO check if accesstoken is present
-
 	profileRequest, err := http.NewRequest("GET", "https://service.wienernetze.at/sm/api/user/profile", nil)
 	if err != nil {
 		return nil, err
@@ -213,13 +216,12 @@ func writeConsumptionToDb(consumption *BewegungsDaten) {
 	token := os.Getenv("INFLUX_TOKEN")
 	bucket := os.Getenv("INFLUX_BUCKET")
 	org := os.Getenv("INFLUX_ORG")
-	targetMeasurement := os.Getenv("INFLUX_CONSUMPTION_MEASUREMENT")
+	targetMeasurement := os.Getenv("INFLUX_MEASUREMENT_CONSUMPTION")
 
 	influxClient := influxdb2.NewClient(influxHost, token)
 	writeApi := influxClient.WriteAPIBlocking(org, bucket)
 
 	for _, data := range consumption.Values {
-		log.Println("value", data.ZeitpunktBis.Time, data.Wert)
 		point := influxdb2.NewPoint(
 			targetMeasurement,
 			map[string]string{"unit": consumption.Descriptor.Einheit},

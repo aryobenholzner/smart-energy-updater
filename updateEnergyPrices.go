@@ -55,7 +55,7 @@ func writePriceDataToDb(priceData *Response) {
 	token := os.Getenv("INFLUX_TOKEN")
 	bucket := os.Getenv("INFLUX_BUCKET")
 	org := os.Getenv("INFLUX_ORG")
-	targetMeasurement := os.Getenv("INFLUX_PRICE_MEASUREMENT")
+	targetMeasurement := os.Getenv("INFLUX_MEASUREMENT_PRICE")
 
 	influxClient := influxdb2.NewClient(influxHost, token)
 	writeApi := influxClient.WriteAPIBlocking(org, bucket)
@@ -80,7 +80,7 @@ func writePriceDataToDb(priceData *Response) {
 
 		err := writeApi.WritePoint(context.Background(), point)
 		if err != nil {
-			log.Println("error while writing to db: ", err)
+			log.Println("error while writing to db:", err)
 		}
 	}
 	influxClient.Close()
